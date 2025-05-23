@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import meety.dtos.GroupDto;
 import meety.models.Group;
 import meety.models.User;
+import meety.security.annotations.AdminOnly;
 import meety.services.GroupService;
 import meety.services.auth.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,11 +60,13 @@ public class GroupController {
         }
     }
 
+    @AdminOnly
     @PutMapping("/{id}")
     public ResponseEntity<Group> updateGroup(@PathVariable Long id, @RequestBody GroupDto updatedGroup) {
         return ResponseEntity.ok(groupService.updateGroup(id, updatedGroup));
     }
 
+    @AdminOnly
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteGroup(@PathVariable Long id) {
         groupService.deleteGroup(id);
@@ -77,6 +80,7 @@ public class GroupController {
         return ResponseEntity.ok(updatedGroup);
     }
 
+    @AdminOnly
     @DeleteMapping("/{groupId}/members/{userId}")
     public ResponseEntity<Group> removeMemberFromGroup(
             @PathVariable Long groupId,

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import meety.dtos.GroupDto;
 
 import java.util.Date;
@@ -26,10 +27,12 @@ public class Group {
 
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
+    @ToString.Exclude
     private List<GroupMember> members;
 
     @ManyToOne
     @JoinColumn(name = "created_by_id")
+    @ToString.Exclude
     private User createdBy;
 
     private Date createdAt;
