@@ -19,7 +19,7 @@ jobs:
       - name: Run Directory Tree Generator
         uses: DenizAltunkapan/directory-tree-generator@v4
         with:
-          path: .
+          path: backend,frontend
           extensions: .java,.html,.ts,.scss,.md
           show-extensions: true
 
