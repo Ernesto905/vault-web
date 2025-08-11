@@ -18,7 +18,7 @@ export class PrivateChatService {
     username2: string,
   ): Observable<PrivateChatDto> {
     return this.http.get<PrivateChatDto>(
-      `${this.apiUrl}/private-chats/between?username1=${username1}&username2=${username2}`,
+      `${this.apiUrl}/private-chats/between?sender=${username1}&receiver=${username2}`,
     );
   }
 

@@ -28,10 +28,10 @@ public class PrivateChatController {
 
     @GetMapping("/between")
     public PrivateChatDto getOrCreatePrivateChat(
-            @RequestParam String username1,
-            @RequestParam String username2
+            @RequestParam String sender,
+            @RequestParam String receiver
     ) {
-        PrivateChat chat = privateChatService.getOrCreatePrivateChat(username1, username2);
+        PrivateChat chat = privateChatService.getOrCreatePrivateChat(sender, receiver);
         return new PrivateChatDto(chat.getId(), chat.getUser1().getUsername(), chat.getUser2().getUsername());
     }
 
