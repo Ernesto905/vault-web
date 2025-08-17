@@ -1,0 +1,16 @@
+meety
+meety.controllers
+meety.config
+meety.config.websocket
+meety.dtos
+meety.dtos.user
+meety.services
+meety.services.auth
+meety.security
+meety.security.aspects
+meety.security.annotations
+meety.repositories
+meety.models
+meety.models.enums
+meety.exceptions
+meety.exceptions.notfound
