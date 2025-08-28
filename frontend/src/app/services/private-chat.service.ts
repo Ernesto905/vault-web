@@ -9,7 +9,7 @@ import { ChatMessageDto } from '../models/dtos/ChatMessageDto';
   providedIn: 'root',
 })
 export class PrivateChatService {
-  private apiUrl = environment.apiUrl;
+  private apiUrl = environment.mainApiUrl;
 
   constructor(private http: HttpClient) {}
 

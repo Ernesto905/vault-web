@@ -14,7 +14,7 @@ export class WebSocketService {
   private connected = false;
   private connectCallbacks: (() => void)[] = [];
   private privateSubscriptions: (() => void)[] = [];
-  private hostUrl = environment.hostUrl;
+  private hostUrl = environment.mainHostAddress;
 
   constructor(private auth: AuthService) {
     this.initClient();

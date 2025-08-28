@@ -1,0 +1,258 @@
+<div class="cloud-container bg-gray-50 min-h-screen p-2 sm:p-3">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-1 sm:mb-2">
+    <h1 class="text-base sm:text-lg font-semibold text-gray-800">
+      Cloud Page
+    </h1>
+    <button
+      (click)="reloadRootFolder()"
+      class="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-gray-300 text-gray-800 text-xxs sm:text-xs rounded hover:bg-gray-400 transition"
+    >
+      ↻ Refresh
+    </button>
+  </div>
+
+  <!-- Loading & Error -->
+  <div
+    *ngIf="loading"
+    class="text-center py-2 text-gray-600 text-xxs sm:text-xs"
+  >
+    <div
+      class="animate-spin h-4 w-4 border-b-2 border-gray-600 mx-auto mb-1"
+    ></div>
+    Loading folder...
+  </div>
+
+  <div
+    *ngIf="error"
+    class="flex items-center gap-1 text-red-600 text-xxs mb-1 sm:mb-2"
+  >
+    ⚠️ {{ error }}
+  </div>
+
+  <!-- Breadcrumbs -->
+  <div
+    *ngIf="currentFolder && !loading"
+    class="flex items-center text-xxs sm:text-xs mb-1 sm:mb-2 gap-1 flex-wrap"
+  >
+    <span
+      class="cursor-pointer text-blue-600"
+      (click)="navigateToRoot()"
+      (dragover)="onBreadcrumbDragOver($event)"
+      (drop)="onBreadcrumbDrop($event, rootPath)"
+      >Root</span
+    >
+    <span
+      *ngFor="let crumb of breadcrumbs; let last = last"
+      class="flex items-center gap-1"
+    >
+      <span>/</span>
+      <span
+        class="truncate max-w-[80px] sm:max-w-[120px]"
+        [class.font-semibold]="last"
+        [class.text-blue-600]="!last"
+        class="cursor-pointer hover:underline"
+        (click)="!last && navigateToFolder(crumb.path)"
+        (dragover)="onBreadcrumbDragOver($event)"
+        (drop)="onBreadcrumbDrop($event, crumb.path)"
+      >
+        {{ crumb.name }}
+      </span>
+    </span>
+  </div>
+
+  <!-- Create Toolbar -->
+  <div class="relative mb-1 sm:mb-2 flex gap-1 sm:gap-2">
+    <button
+      (click)="showCreateDropdown = !showCreateDropdown"
+      class="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-gray-200 text-gray-800 text-xxs sm:text-xs rounded hover:bg-gray-300 transition"
+    >
+      Create
+    </button>
+    <div
+      *ngIf="showCreateDropdown"
+      class="absolute mt-5 sm:mt-6 bg-white border border-gray-200 rounded shadow-md z-10 w-28 sm:w-32 text-xxs sm:text-xs"
+    >
+      <button
+        (click)="createNewFolder(); showCreateDropdown = false"
+        class="w-full text-left px-1.5 sm:px-2 py-1 hover:bg-gray-100 flex items-center gap-1"
+      >
+        📁 Folder
+      </button>
+      <button
+        (click)="createNewFile(); showCreateDropdown = false"
+        class="w-full text-left px-1.5 sm:px-2 py-1 hover:bg-gray-100 flex items-center gap-1"
+      >
+        📄 File
+      </button>
+      <label
+        for="file-upload-dropdown"
+        class="w-full text-left px-1.5 sm:px-2 py-1 hover:bg-gray-100 flex items-center gap-1 cursor-pointer"
+      >
+        ⬆️ Upload
+        <input
+          id="file-upload-dropdown"
+          type="file"
+          (change)="onFileSelected($event)"
+          class="hidden"
+        />
+      </label>
+    </div>
+  </div>
+
+  <!-- File Explorer Table -->
+  <div
+    *ngIf="currentFolder && !loading"
+    class="bg-white shadow rounded overflow-x-auto"
+  >
+    <table class="w-full table-auto border-collapse text-xxs sm:text-xs">
+      <thead class="bg-gray-100 sticky top-0">
+        <tr>
+          <th class="text-left px-1 py-0.5 sm:px-2 sm:py-1">Name</th>
+          <th class="text-left px-1 py-0.5 sm:px-2 sm:py-1">Size</th>
+          <th class="text-left px-1 py-0.5 sm:px-2 sm:py-1">Type</th>
+          <th class="px-1 py-0.5 sm:px-2 sm:py-1 text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Folders -->
+        <tr
+          *ngFor="let folder of currentFolder.folders"
+          class="hover:bg-gray-50 cursor-pointer"
+          (drop)="onDrop($event, folder, true)"
+          (dragover)="onDragOver($event)"
+        >
+          <td
+            class="px-1 py-0.5 sm:px-2 sm:py-1 flex items-center gap-1 sm:gap-2"
+            draggable="true"
+            (dragstart)="onDragStart($event, folder.path, true)"
+            (click)="navigateToFolder(folder.path)"
+          >
+            📁 {{ folder.name }}
+          </td>
+          <td class="px-1 py-0.5 sm:px-2 sm:py-1 text-gray-500">
+            {{ folder.folders.length + folder.files.length }} items
+          </td>
+          <td class="px-1 py-0.5 sm:px-2 sm:py-1 text-gray-500">Folder</td>
+          <td class="px-1 py-0.5 sm:px-2 sm:py-1 text-center">
+            <button
+              (click)="$event.stopPropagation(); renameFolder(folder)"
+              class="text-green-600 hover:bg-green-100 px-1 py-0.5 sm:px-2 sm:py-1 rounded text-xxs sm:text-xs"
+            >
+              ✏️
+            </button>
+            <button
+              (click)="$event.stopPropagation(); deleteFolder(folder.path)"
+              class="text-red-600 hover:bg-red-100 px-1 py-0.5 sm:px-2 sm:py-1 rounded text-xxs sm:text-xs"
+            >
+              🗑️
+            </button>
+          </td>
+        </tr>
+
+        <!-- Files -->
+        <tr
+          *ngFor="let file of currentFolder.files"
+          class="hover:bg-gray-50"
+          (drop)="onDrop($event, null, false)"
+          (dragover)="onDragOver($event)"
+        >
+          <td
+            class="px-1 py-0.5 sm:px-2 sm:py-1 flex items-center gap-1 sm:gap-2"
+            draggable="true"
+            (dragstart)="onDragStart($event, file.path, false)"
+          >
+            📄 {{ file.name }}
+          </td>
+          <td class="px-1 py-0.5 sm:px-2 sm:py-1">
+            {{ formatFileSize(file.size) }}
+          </td>
+          <td class="px-1 py-0.5 sm:px-2 sm:py-1">
+            {{ file.mimeType || "Unknown" }}
+          </td>
+          <td class="px-1 py-0.5 sm:px-2 sm:py-1 flex justify-center gap-1">
+            <button
+              class="text-blue-600 hover:bg-blue-100 px-1 py-0.5 sm:px-2 sm:py-1 rounded text-xxs sm:text-xs"
+              (click)="downloadFile(file)"
+            >
+              ⬇️
+            </button>
+            <button
+              class="text-green-600 hover:bg-green-100 px-1 py-0.5 sm:px-2 sm:py-1 rounded text-xxs sm:text-xs"
+              (click)="editFile(file)"
+            >
+              ✏️
+            </button>
+            <button
+              class="text-red-600 hover:bg-red-100 px-1 py-0.5 sm:px-2 sm:py-1 rounded text-xxs sm:text-xs"
+              (click)="deleteFile(file.path)"
+            >
+              🗑️
+            </button>
+          </td>
+        </tr>
+
+        <!-- Empty State -->
+        <tr
+          *ngIf="
+            currentFolder.folders.length === 0 &&
+            currentFolder.files.length === 0
+          "
+        >
+          <td
+            colspan="4"
+            class="text-center py-3 sm:py-6 text-gray-400 text-xxs sm:text-xs"
+          >
+            This folder is empty. Create a new folder or file.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- File Editor Modal -->
+  <div
+    *ngIf="showFileEditor"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-1 sm:p-2"
+  >
+    <div
+      class="bg-white w-full max-w-md p-2 sm:p-3 rounded shadow-lg flex flex-col"
+    >
+      <div class="flex justify-between items-center mb-1 sm:mb-2">
+        <h2 class="font-semibold text-xs sm:text-sm">
+          {{ editingFile ? "Edit File" : "Create New File" }}
+        </h2>
+        <button
+          class="text-gray-500 hover:text-gray-800 text-xs sm:text-sm"
+          (click)="showFileEditor = false"
+        >
+          ✖️
+        </button>
+      </div>
+      <input
+        type="text"
+        [(ngModel)]="newFileName"
+        class="border p-1 sm:p-2 rounded mb-1 sm:mb-2 w-full text-xxs sm:text-xs"
+        placeholder="filename.txt"
+      />
+      <textarea
+        [(ngModel)]="fileContent"
+        class="border p-1 sm:p-2 rounded h-32 sm:h-48 w-full font-mono mb-1 sm:mb-2 text-xxs sm:text-xs"
+      ></textarea>
+      <div class="flex justify-end gap-1 sm:gap-2">
+        <button
+          class="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-gray-300 rounded hover:bg-gray-400 text-xxs sm:text-xs"
+          (click)="showFileEditor = false"
+        >
+          Cancel
+        </button>
+        <button
+          class="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xxs sm:text-xs"
+          (click)="saveFile()"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

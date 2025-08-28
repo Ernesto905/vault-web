@@ -8,7 +8,7 @@ import { UserDto } from '../models/dtos/UserDto';
   providedIn: 'root',
 })
 export class UserService {
-  private apiUrl = environment.apiUrl;
+  private apiUrl = environment.mainApiUrl;
 
   constructor(private http: HttpClient) {}
 
