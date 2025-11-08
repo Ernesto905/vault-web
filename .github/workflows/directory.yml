@@ -27,8 +27,10 @@ jobs:
         run: |
           git config --global user.name "$GITHUB_ACTOR"
           git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
           BRANCH_NAME=dependabot/directory-update
 
+          # Prüfen, ob Branch remote existiert
           if git ls-remote --exit-code origin $BRANCH_NAME; then
             git fetch origin $BRANCH_NAME
             git checkout $BRANCH_NAME
@@ -36,10 +38,15 @@ jobs:
             git checkout -b $BRANCH_NAME
           fi
 
-      - name: Commit changes
+      - name: Commit changes if there are any
         run: |
           git add DIRECTORY.md
-          git diff --cached --quiet || git commit -m "Update DIRECTORY.md"
+          # commit only if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "Update DIRECTORY.md"
+          else
+            echo "No changes to commit"
+          fi
 
       - name: Create or update Pull Request
         uses: peter-evans/create-pull-request@v7
@@ -50,3 +57,4 @@ jobs:
           title: "Bump directory structure (auto-generated)"
           body: "This PR updates DIRECTORY.md automatically."
           draft: false
+          fail-on-empty-changes: false
