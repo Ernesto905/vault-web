@@ -15,7 +15,7 @@
     />
 
     <!-- USERNAME ERRORS -->
-    <div class="text-red-600 text-sm mt-1" *ngIf="f['username'].errors?.['required']">
+    <div class="text-red-600 text-sm mt-1" *ngIf="(submitted || f['username'].touched) && f['username'].errors?.['required']">
       Username is required.
     </div>
     <div class="text-red-600 text-sm mt-1" *ngIf="f['username'].errors?.['usernameTaken']">
