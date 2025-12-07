@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root',
@@ -9,7 +10,9 @@ import { environment } from '../../environments/environment';
 export class AuthService {
   private apiUrl = environment.mainApiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+     private router: Router 
+  ) {}
 
   login(username: string, password: string): Observable<{ token: string }> {
     return this.http
@@ -54,6 +57,9 @@ export class AuthService {
 
   logout(): void {
     localStorage.removeItem('token');
+    localStorage.removeItem('username');
+
+    this.router.navigate(['/login']);
   }
 
   checkUsernameExists(username: string): Observable<boolean> {
