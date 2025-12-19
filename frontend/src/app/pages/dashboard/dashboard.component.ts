@@ -35,7 +35,8 @@ export class DashboardComponent implements OnInit {
   isSavingPassword = false;
   passwordSuccess = '';
   passwordError = '';
-  private readonly passwordComplexity = /(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+/;
+  private readonly passwordComplexity =
+    /(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+/;
 
   constructor(
     private dashboardService: DashboardService,
@@ -79,7 +80,7 @@ export class DashboardComponent implements OnInit {
     this.authService.changePassword(currentPassword, newPassword).subscribe({
       next: () => {
         this.isSavingPassword = false;
-        this.passwordSuccess = 'Passwort erfolgreich aktualisiert.';
+        this.passwordSuccess = 'Password updated successfully.';
         this.passwordForm.reset();
         this.passwordForm.markAsPristine();
         this.passwordForm.markAsUntouched();
@@ -91,7 +92,8 @@ export class DashboardComponent implements OnInit {
             ? error.error
             : error?.error?.message;
         this.passwordError =
-          serverMessage || 'Aktualisierung fehlgeschlagen. Bitte erneut versuchen.';
+          serverMessage ||
+          'Update failed. Please try again.';
       },
     });
   }
@@ -118,36 +120,38 @@ export class DashboardComponent implements OnInit {
       },
       error: () => {
         this.isLoading = false;
-        this.error = 'Das Dashboard konnte nicht geladen werden.';
+        this.error = 'Failed to load the dashboard.';
       },
     });
   }
 
   private buildHighlights(data: UserDashboardDto): void {
-    const messages = Intl.NumberFormat('de-DE').format(data.profile.messagesSent);
+    const messages = Intl.NumberFormat('en-US').format(
+      data.profile.messagesSent,
+    );
     this.statHighlights = [
       {
-        label: 'Gruppen',
+        label: 'Groups',
         value: data.profile.groupCount.toString(),
-        helper: 'aktive Communities',
+        helper: 'active communities',
         accent: 'cyan',
       },
       {
-        label: 'Private Chats',
+        label: 'Private chats',
         value: data.profile.privateChatCount.toString(),
-        helper: 'laufende Dialoge',
+        helper: 'ongoing conversations',
         accent: 'amber',
       },
       {
-        label: 'Gesendete Nachrichten',
+        label: 'Messages sent',
         value: messages,
-        helper: 'insgesamt',
+        helper: 'total',
         accent: 'emerald',
       },
       {
-        label: 'Offene Umfragen',
+        label: 'Open polls',
         value: data.polls.length.toString(),
-        helper: 'die Aufmerksamkeit brauchen',
+        helper: 'need attention',
         accent: 'rose',
       },
     ];
@@ -171,7 +175,9 @@ export class DashboardComponent implements OnInit {
     );
   }
 
-  private passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
+  private passwordMatchValidator(
+    control: AbstractControl,
+  ): ValidationErrors | null {
     const newPassword = control.get('newPassword')?.value;
     const confirmPassword = control.get('confirmPassword')?.value;
 

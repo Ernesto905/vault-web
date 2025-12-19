@@ -42,10 +42,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
    * @param userDetailsService the user details service to load user information by username
    */
   private static final List<String> PUBLIC_PATHS =
-      List.of(
-          "/api/auth/login",
-          "/api/auth/register",
-          "/api/auth/check-username");
+      List.of("/api/auth/login", "/api/auth/register", "/api/auth/check-username");
 
   /** Filters each HTTP request, performing JWT validation and setting authentication context. */
   @Override

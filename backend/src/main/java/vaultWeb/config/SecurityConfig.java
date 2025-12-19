@@ -88,21 +88,21 @@ public class SecurityConfig {
         .csrf(csrf -> csrf.disable())
         .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
-          auth ->
-            auth.requestMatchers(
-                "/api/auth/login",
-                "/api/auth/register",
-                "/api/auth/check-username",
-                "/v3/api-docs/**",
-                "/swagger-ui/**",
-                "/swagger-ui.html",
-                "/swagger-resources/**",
-                "/webjars/**",
-                "/docs/**",
-                "/ws-chat/**")
-              .permitAll()
-              .anyRequest()
-              .authenticated())
+            auth ->
+                auth.requestMatchers(
+                        "/api/auth/login",
+                        "/api/auth/register",
+                        "/api/auth/check-username",
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/swagger-resources/**",
+                        "/webjars/**",
+                        "/docs/**",
+                        "/ws-chat/**")
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated())
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();

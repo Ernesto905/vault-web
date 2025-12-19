@@ -1,7 +1,11 @@
 .dashboard-wrapper {
   padding: 2rem clamp(1rem, 4vw, 3.5rem);
   min-height: calc(100vh - 5rem);
-  background: radial-gradient(circle at top, rgba(59, 130, 246, 0.12), transparent 55%);
+  background: radial-gradient(
+    circle at top,
+    rgba(59, 130, 246, 0.12),
+    transparent 55%
+  );
 }
 
 .hero-panel {
@@ -66,19 +70,19 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.stat-card[data-accent='cyan'] {
+.stat-card[data-accent="cyan"] {
   box-shadow: 0 10px 25px rgba(34, 211, 238, 0.35);
 }
 
-.stat-card[data-accent='amber'] {
+.stat-card[data-accent="amber"] {
   box-shadow: 0 10px 25px rgba(251, 191, 36, 0.35);
 }
 
-.stat-card[data-accent='emerald'] {
+.stat-card[data-accent="emerald"] {
   box-shadow: 0 10px 25px rgba(16, 185, 129, 0.35);
 }
 
-.stat-card[data-accent='rose'] {
+.stat-card[data-accent="rose"] {
   box-shadow: 0 10px 25px rgba(244, 114, 182, 0.35);
 }
 
@@ -278,7 +282,7 @@
 }
 
 .timeline::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0.55rem;
   top: 0.5rem;
@@ -319,7 +323,12 @@
 
 .loading-state .skeleton {
   border-radius: 1rem;
-  background: linear-gradient(90deg, var(--color-border), var(--color-surface-hover), var(--color-border));
+  background: linear-gradient(
+    90deg,
+    var(--color-border),
+    var(--color-surface-hover),
+    var(--color-border)
+  );
   background-size: 200% 100%;
   animation: shimmer 1.6s infinite;
 }
@@ -390,7 +399,9 @@
   font-size: 0.95rem;
   background: var(--color-background-secondary);
   color: var(--color-text-primary);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .form-field input:focus {
