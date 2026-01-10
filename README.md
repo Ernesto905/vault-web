@@ -98,15 +98,6 @@ cd backend
 
 For development with the Angular frontend, as it requires HTTPS for secure cookies and JWT authentication.
 
-**First time setup:**
-
-Create your local SSL configuration file
-
-```bash
-cd backend/src/main/resources
-cp application-dev.example.yml application-dev.yml
-```
-
 **Start with HTTPS:**
 
 ```bash
