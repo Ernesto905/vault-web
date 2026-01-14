@@ -82,8 +82,3 @@ public class RateLimitFilter implements Filter {
         return request.getRemoteAddr();
     }
 }
-
-// for i in {1..110}; do echo "Request $i"; curl --location
-// 'http://localhost:8080/api/dashboard/me' --header 'Authorization: Bearer
-// eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJOaWtoaWwiLCJpYXQiOjE3NjgzMjQ2MDIsImV4cCI6MTc2ODMyNTUwMn0.lhaYKBS76XuMOnILyh5tEmzJl_hHJ_dwr9I1At3dzDYccOOzanAXp2dsGCjeT0O_TCHqf3PXOwUQoAs86wl-rg'
-// -w "\nStatus: %{http_code}\n" -s -o /dev/null; echo "---"; done
