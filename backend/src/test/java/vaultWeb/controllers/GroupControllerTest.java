@@ -160,14 +160,13 @@ class GroupControllerTest {
 
   @Test
   void shouldUpdateGroupSuccessfully() {
-    when(groupService.updateGroup(1L, createTestGroupDto("Group 1", "Group 1 description", true)))
-        .thenReturn(createTestGroup(1L, "Group 1"));
-    ResponseEntity<Group> response =
-        groupController.updateGroup(1L, createTestGroupDto("Group 1", "Group 1 description", true));
+    GroupDto testGroupDto = createTestGroupDto("Group 1", "Group 1 description", true);
+    Group expectedGroup = createTestGroup(1L, "Group 1");
+    when(groupService.updateGroup(1L, testGroupDto)).thenReturn(expectedGroup);
+    ResponseEntity<Group> response = groupController.updateGroup(1L, testGroupDto);
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertEquals(createTestGroup(1L, "Group 1"), response.getBody());
-    verify(groupService, times(1))
-        .updateGroup(1L, createTestGroupDto("Group 1", "Group 1 description", true));
+    assertEquals(expectedGroup, response.getBody());
+    verify(groupService, times(1)).updateGroup(1L, testGroupDto);
   }
 
   @Test
@@ -193,16 +192,16 @@ class GroupControllerTest {
 
   @Test
   void shouldRemoveMemberFromGroupSuccessfully() {
-
-    when(groupService.removeMember(1L, 2L)).thenReturn(createTestGroup(1L, "Group 1"));
+    Group expectedGroup = createTestGroup(1L, "Group 1");
+    when(groupService.removeMember(1L, 2L)).thenReturn(expectedGroup);
     ResponseEntity<Group> response = groupController.removeMemberFromGroup(1L, 2L);
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertEquals(createTestGroup(1L, "Group 1"), response.getBody());
+    assertEquals(expectedGroup, response.getBody());
     verify(groupService, times(1)).removeMember(1L, 2L);
   }
 
   // ============================================================================
-  // Error Path Tests (6 tests)
+  // Error Path Tests (7 tests)
   // ============================================================================
 
   @Test
@@ -217,22 +216,22 @@ class GroupControllerTest {
 
   @Test
   void shouldFailJoinGroup_WhenAlreadyMember() {
-    when(authService.getCurrentUser()).thenReturn(createTestUser(1L, "User 1"));
-    when(groupService.joinGroup(1L, createTestUser(1L, "User 1")))
-        .thenThrow(new AlreadyMemberException(1L, 1L));
+    User testUser = createTestUser(1L, "User 1");
+    when(authService.getCurrentUser()).thenReturn(testUser);
+    when(groupService.joinGroup(1L, testUser)).thenThrow(new AlreadyMemberException(1L, 1L));
     assertThrows(AlreadyMemberException.class, () -> groupController.joinGroup(1L));
     verify(authService, times(1)).getCurrentUser();
-    verify(groupService, times(1)).joinGroup(1L, createTestUser(1L, "User 1"));
+    verify(groupService, times(1)).joinGroup(1L, testUser);
   }
 
   @Test
   void shouldFailLeaveGroup_WhenNotMember() {
-    when(authService.getCurrentUser()).thenReturn(createTestUser(1L, "User 1"));
-    when(groupService.leaveGroup(1L, createTestUser(1L, "User 1")))
-        .thenThrow(new NotMemberException(1L, 1L));
+    User testUser = createTestUser(1L, "User 1");
+    when(authService.getCurrentUser()).thenReturn(testUser);
+    when(groupService.leaveGroup(1L, testUser)).thenThrow(new NotMemberException(1L, 1L));
     assertThrows(NotMemberException.class, () -> groupController.leaveGroup(1L));
     verify(authService, times(1)).getCurrentUser();
-    verify(groupService, times(1)).leaveGroup(1L, createTestUser(1L, "User 1"));
+    verify(groupService, times(1)).leaveGroup(1L, testUser);
   }
 
   @Test
@@ -264,14 +263,11 @@ class GroupControllerTest {
 
   @Test
   void shouldFailUpdateGroup_WhenGroupNotFound() {
-    when(groupService.updateGroup(999L, createTestGroupDto("Group 1", "Group 1 description", true)))
+    GroupDto testGroupDto = createTestGroupDto("Group 1", "Group 1 description", true);
+    when(groupService.updateGroup(999L, testGroupDto))
         .thenThrow(new GroupNotFoundException("Group not found with id: 999"));
     assertThrows(
-        GroupNotFoundException.class,
-        () ->
-            groupController.updateGroup(
-                999L, createTestGroupDto("Group 1", "Group 1 description", true)));
-    verify(groupService, times(1))
-        .updateGroup(999L, createTestGroupDto("Group 1", "Group 1 description", true));
+        GroupNotFoundException.class, () -> groupController.updateGroup(999L, testGroupDto));
+    verify(groupService, times(1)).updateGroup(999L, testGroupDto);
   }
 }
