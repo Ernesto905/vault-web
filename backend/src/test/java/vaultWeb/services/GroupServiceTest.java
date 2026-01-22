@@ -244,7 +244,7 @@ class GroupServiceTest {
 
     assertEquals("Updated Name", result.getName());
     assertEquals("Updated Description", result.getDescription());
-    assertEquals(false, result.getIsPublic());
+    assertFalse(result.getIsPublic());
     verify(groupRepository, times(1)).save(group);
   }
 
