@@ -4,6 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -11,11 +15,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.JsonNode;
+
 import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import vaultWeb.dtos.user.ChangePasswordRequest;
 import vaultWeb.dtos.user.UserDto;
 import vaultWeb.models.User;
@@ -101,20 +108,15 @@ class UserControllerIntegrationTest extends IntegrationTestBase {
    * @param authToken the Authorization header value, or null for no auth header
    * @return the ResponseEntity from the request
    */
-  private org.springframework.http.ResponseEntity<String> performRestTemplateGet(
-      String endpoint, String authToken) {
-    org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+  private ResponseEntity<String> performRestTemplateGet(String endpoint, String authToken) {
+    HttpHeaders headers = new HttpHeaders();
     if (authToken != null) {
       headers.set("Authorization", authToken);
     }
-    org.springframework.http.HttpEntity<String> entity =
-        new org.springframework.http.HttpEntity<>(headers);
+    HttpEntity<String> entity = new HttpEntity<>(headers);
 
     return restTemplate.exchange(
-        "http://localhost:" + port + endpoint,
-        org.springframework.http.HttpMethod.GET,
-        entity,
-        String.class);
+        "http://localhost:" + port + endpoint, HttpMethod.GET, entity, String.class);
   }
 
   /**
@@ -142,7 +144,6 @@ class UserControllerIntegrationTest extends IntegrationTestBase {
    * @throws Exception if the login request fails
    */
   private MvcResult loginUser(UserDto testUser) throws Exception {
-
     return mockMvc
         .perform(
             post("/api/auth/login")
@@ -240,6 +241,77 @@ class UserControllerIntegrationTest extends IntegrationTestBase {
   }
 
   // ============================================================================
+  // Stage 2b: Login Error Scenarios (3 tests)
+  // ============================================================================
+
+  @Test
+  void shouldFailLogin_WithWrongPassword() throws Exception {
+    // Register a user first
+    UserDto testUser = createUserDto(TEST_USERNAME, TEST_PASSWORD);
+    registerUser(testUser);
+
+    // Attempt login with wrong password
+    UserDto wrongPasswordUser = createUserDto(TEST_USERNAME, "WrongPassword1!");
+
+    mockMvc
+        .perform(
+            post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(wrongPasswordUser)))
+        .andExpect(status().isUnauthorized())
+        .andExpect(content().string("Authentication failed"));
+  }
+
+  @Test
+  void shouldFailLogin_WithNonExistentUser() throws Exception {
+    // Attempt login with a user that does not exist
+    UserDto nonExistentUser = createUserDto("nonexistent", TEST_PASSWORD);
+
+    mockMvc
+        .perform(
+            post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(nonExistentUser)))
+        .andExpect(status().isUnauthorized())
+        .andExpect(content().string("Authentication failed"));
+  }
+
+  @Test
+  void shouldFailLogin_WithNullCredentials() throws Exception {
+    // Test with null username
+    mockMvc
+        .perform(
+            post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\": null, \"password\": \"TestPassword1!\"}"))
+        .andExpect(status().isBadRequest());
+
+    // Test with null password
+    mockMvc
+        .perform(
+            post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\": \"testuser\", \"password\": null}"))
+        .andExpect(status().isBadRequest());
+
+    // Test with empty/blank username
+    mockMvc
+        .perform(
+            post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\": \"\", \"password\": \"TestPassword1!\"}"))
+        .andExpect(status().isBadRequest());
+
+    // Test with empty/blank password
+    mockMvc
+        .perform(
+            post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\": \"testuser\", \"password\": \"\"}"))
+        .andExpect(status().isBadRequest());
+  }
+
+  // ============================================================================
   // Stage 3: JWT Token Integration (5 tests)
   // ============================================================================
 
@@ -301,18 +373,17 @@ class UserControllerIntegrationTest extends IntegrationTestBase {
 
   @Test
   void shouldReject_WithInvalidToken_UsingRestTemplate() {
-    org.springframework.http.ResponseEntity<String> response =
+    ResponseEntity<String> response =
         performRestTemplateGet("/api/auth/users", authHeader("invalid_token"));
 
-    assertEquals(org.springframework.http.HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
   }
 
   @Test
-  void shouldReject_WithMissingToken() throws Exception {
-    org.springframework.http.ResponseEntity<String> response =
-        performRestTemplateGet("/api/auth/users", null);
+  void shouldReject_WithMissingToken() {
+    ResponseEntity<String> response = performRestTemplateGet("/api/auth/users", null);
 
-    assertEquals(org.springframework.http.HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
   }
 
   @Test
@@ -329,10 +400,68 @@ class UserControllerIntegrationTest extends IntegrationTestBase {
         testJwtUtil.generateTokenWithExpiration(savedUser, EXPIRED_TOKEN_OFFSET_MS);
 
     // Try to access protected endpoint with expired token
-    org.springframework.http.ResponseEntity<String> response =
+    ResponseEntity<String> response =
         performRestTemplateGet("/api/auth/users", authHeader(expiredToken));
 
-    assertEquals(org.springframework.http.HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+  }
+
+  // ============================================================================
+  // Authorization Header Variations
+  // ============================================================================
+
+  @Test
+  void shouldReject_WithMalformedAuthorizationHeader() {
+    // Test with completely malformed header value (random string)
+    ResponseEntity<String> response = performRestTemplateGet("/api/auth/users", "random_string");
+
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+  }
+
+  @Test
+  void shouldReject_WithMissingBearerPrefix() throws Exception {
+    // Test with valid JWT token but without "Bearer " prefix
+    UserDto testUser = createUserDto(TEST_USERNAME, TEST_PASSWORD);
+    registerUser(testUser);
+    User savedUser = userRepository.findByUsername(testUser.getUsername()).get();
+    String token = jwtUtil.generateToken(savedUser);
+
+    ResponseEntity<String> response = performRestTemplateGet("/api/auth/users", token);
+
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+  }
+
+  @Test
+  void shouldReject_WithEmptyAuthorizationHeader() {
+    // Test with empty Authorization header value
+    ResponseEntity<String> response = performRestTemplateGet("/api/auth/users", "");
+
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+  }
+
+  @Test
+  void shouldReject_WithBearerPrefixOnly() {
+    // Test with just "Bearer " and no token
+    ResponseEntity<String> response = performRestTemplateGet("/api/auth/users", "Bearer ");
+
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+  }
+
+  @Test
+  void shouldReject_WithBearerPrefixWrongCase() throws Exception {
+    // Test with wrong case prefix (e.g., "bearer ", "BEARER ")
+    UserDto testUser = createUserDto(TEST_USERNAME, TEST_PASSWORD);
+    registerUser(testUser);
+    User savedUser = userRepository.findByUsername(testUser.getUsername()).get();
+    String token = jwtUtil.generateToken(savedUser);
+
+    ResponseEntity<String> lowerCaseResponse =
+        performRestTemplateGet("/api/auth/users", "bearer " + token);
+    assertEquals(HttpStatus.UNAUTHORIZED, lowerCaseResponse.getStatusCode());
+
+    ResponseEntity<String> upperCaseResponse =
+        performRestTemplateGet("/api/auth/users", "BEARER " + token);
+    assertEquals(HttpStatus.UNAUTHORIZED, upperCaseResponse.getStatusCode());
   }
 
   // ============================================================================
@@ -354,7 +483,7 @@ class UserControllerIntegrationTest extends IntegrationTestBase {
     // Verify the refresh token has been sent with the cookie
     Cookie newRefreshToken = extractCookie(result, "refresh_token");
     assertNotNull(newRefreshToken, "New refresh token should be set");
-    assertNotNull(newRefreshToken.getValue(), "新的刷新令牌应该有一个值");
+    assertNotNull(newRefreshToken.getValue(), "New refresh token should have a value");
     assertTrue(newRefreshToken.getValue().length() > 0, "New refresh token should have a value");
     assertNotEquals(newRefreshToken.getValue(), refreshToken, "Refresh token should be rotated");
 
@@ -435,7 +564,9 @@ class UserControllerIntegrationTest extends IntegrationTestBase {
         .andExpect(status().isUnauthorized());
   }
 
-  // ==================== Stage 5: Spring Security Integration ====================
+  // ============================================================================
+  // Stage 5: Spring Security Integration
+  // ============================================================================
 
   @Test
   void shouldChangePassword_WithValidCurrentPassword() throws Exception {
@@ -489,7 +620,9 @@ class UserControllerIntegrationTest extends IntegrationTestBase {
         .andExpect(status().isUnauthorized());
   }
 
-  // ==================== Stage 6: Full E2E Scenarios ====================
+  // ============================================================================
+  // Stage 6: Full E2E Scenarios
+  // ============================================================================
 
   @Test
   void shouldCompleteFullAuthenticationFlow() throws Exception {
