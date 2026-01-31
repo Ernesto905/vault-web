@@ -9,7 +9,23 @@ let isRefreshing = false;
 export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
 
-  // Attach token
+  // Explicit Authorization Header
+  if (req.headers.has('Authorization')) {
+    return next(req).pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          // If the refresh token request itself fails, we must logout.
+          if (req.url.includes('/refresh')) {
+            authService.logout();
+          }
+          // Otherwise, just pass the 401 through.
+        }
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  // Attach the token automatically if not present and not an auth endpoint.
   if (
     !req.url.includes('/login') &&
     !req.url.includes('/register') &&
@@ -29,13 +45,13 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
-      // If refresh fails → logout
+      // If the refresh endpoint returns 401, the refresh token is invalid/expired.
       if (req.url.includes('/refresh')) {
         authService.logout();
         return throwError(() => error);
       }
 
-      // If refresh already in progress → wait
+      // Handle 401 by attempting to refresh the token
       if (isRefreshing) {
         return refreshTokenSubject.pipe(
           switchMap((token) => {

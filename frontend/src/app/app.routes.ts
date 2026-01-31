@@ -5,6 +5,7 @@ import { HomeComponent } from './pages/home/home.component';
 import { RegisterComponent } from './pages/register/register.component';
 import { CloudComponent } from './pages/cloud/cloud.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { PasswordManagerComponent } from './pages/password-manager/password-manager.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -14,6 +15,12 @@ export const routes: Routes = [
     component: DashboardComponent,
     canActivate: [authGuard],
   },
+  {
+    path: 'passwords',
+    component: PasswordManagerComponent,
+    canActivate: [authGuard],
+  },
+  { path: 'password-manager', redirectTo: 'passwords', pathMatch: 'full' },
   { path: 'register', component: RegisterComponent },
   { path: 'cloud', component: CloudComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: 'login' },
